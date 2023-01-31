@@ -59,10 +59,30 @@ class EmployeeViewModel : BaseViewModel<Navigator>() {
 //
 //    }
 
-    fun updateViews(yesterdayHours: Long, weekHours: Long, monthHours: Long) {
-        yesterdayWorkedTimeTV.set("$yesterdayHours h")
-        weekWorkedTimeTV.set("$weekHours h")
-        MonthWorkedTimeTV.set("$monthHours h")
+    fun updateViews() {
+
+        val yesterdayWorkedTimeInMinutes = yesterdayWorkedTime
+        val yesterdayHourss = yesterdayWorkedTimeInMinutes / 60
+        val yesterdayMinutes = yesterdayWorkedTimeInMinutes % 60
+
+        yesterdayWorkedTimeTV.set("${yesterdayHourss}h ${yesterdayMinutes}m")
+        yesterdayWorkedTimeTV.notifyChange()
+
+        val weekWorkedTimeInMinutes = weekWorkedTime
+        val weekHourss = weekWorkedTimeInMinutes / 60
+        val weekMinutes = weekWorkedTimeInMinutes % 60
+
+        weekWorkedTimeTV.set("${weekHourss}h ${weekMinutes}m")
+        weekWorkedTimeTV.notifyChange()
+
+        val monthWorkedTimeInMinutes = monthWorkedTime
+        val monthHourss = monthWorkedTimeInMinutes / 60
+        val monthMinutes = monthWorkedTimeInMinutes % 60
+
+        MonthWorkedTimeTV.set("${monthHourss}h ${monthMinutes}m")
+        MonthWorkedTimeTV.notifyChange()
+
+
     }
 
     // Method to start the timer
@@ -92,46 +112,92 @@ class EmployeeViewModel : BaseViewModel<Navigator>() {
         }
     }
     // Method to stop the timer
+//    fun stop() {
+//        job?.cancel()
+//        // save worked time to yesterday
+//        yesterdayWorkedTime = remainingTime
+//        saveWorkedTimetoYesterdayFieldInTheFireStore()
+//        // add worked time to the week
+//        val currentDay = Calendar.getInstance().get(Calendar.DAY_OF_WEEK)
+//        if (currentDay != Calendar.FRIDAY && currentDay != Calendar.SATURDAY) {
+//            weekWorkedTime += yesterdayWorkedTime
+//            monthWorkedTime += yesterdayWorkedTime
+//        }
+//        val currentDate = Calendar.getInstance().time
+//        val endOfWeek = Calendar.getInstance()
+//        endOfWeek.set(Calendar.DAY_OF_WEEK, Calendar.FRIDAY)
+//        if (currentDate >= endOfWeek.time) {
+//            // it's the end of the week, save the worked time to firestore
+//            saveWorkedTimetoWeekFieldInTheFireStore()
+//
+//            // add worked time to the month
+//            monthWorkedTime += weekWorkedTime
+//
+//            val endOfMonth = Calendar.getInstance()
+//            endOfMonth.set(Calendar.DAY_OF_MONTH, endOfMonth.getActualMaximum(Calendar.DAY_OF_MONTH))
+//            if (currentDate >= endOfMonth.time) {
+//                // it's the end of the month, save the worked time to firestore
+//                saveWorkedTimetoMonthFieldInTheFireStore()
+//
+//                // reset the month because we will start a new month
+//                monthWorkedTime = 0
+//            }
+//
+//            // reset the week because we will start a new week
+//            weekWorkedTime = 0
+//        }
+//        updateViews(yesterdayWorkedTime, weekWorkedTime, monthWorkedTime)
+//    }
+
     fun stop() {
-        job?.cancel()
-        // save worked time to yesterday
-        yesterdayWorkedTime = remainingTime
-        saveWorkedTimetoYesterdayFieldInTheFireStore()
-        // add worked time to the week
-        weekWorkedTime += yesterdayWorkedTime
-
-        val currentDate = Calendar.getInstance().time
-        val endOfWeek = Calendar.getInstance()
-        endOfWeek.set(Calendar.DAY_OF_WEEK, Calendar.FRIDAY)
-        if (currentDate >= endOfWeek.time) {
-            // it's the end of the week, save the worked time to firestore
-            saveWorkedTimetoWeekFieldInTheFireStore()
-
-            // add worked time to the month
+        if (isTimerRunning){
+            job?.cancel()
+            // save worked time to yesterday
+            yesterdayWorkedTime = remainingTime
+            saveWorkedTimetoYesterdayFieldInTheFireStore()
+            // add worked time to the week
+            weekWorkedTime += yesterdayWorkedTime
             monthWorkedTime += weekWorkedTime
+            val currentDate = Calendar.getInstance().time
+            val endOfWeek = Calendar.getInstance()
+            endOfWeek.set(Calendar.DAY_OF_WEEK, Calendar.FRIDAY)
+            if (currentDate <= endOfWeek.time) {
+                // it's the end of the week, save the worked time to firestore
+                saveWorkedTimetoWeekFieldInTheFireStore()
 
-            val endOfMonth = Calendar.getInstance()
-            endOfMonth.set(Calendar.DAY_OF_MONTH, endOfMonth.getActualMaximum(Calendar.DAY_OF_MONTH))
-            if (currentDate >= endOfMonth.time) {
-                // it's the end of the month, save the worked time to firestore
-                saveWorkedTimetoMonthFieldInTheFireStore()
+                // add worked time to the month
+                monthWorkedTime += weekWorkedTime
 
-                // reset the month because we will start a new month
-                monthWorkedTime = 0
+                val endOfMonth = Calendar.getInstance()
+                endOfMonth.set(Calendar.DAY_OF_MONTH, endOfMonth.getActualMaximum(Calendar.DAY_OF_MONTH))
+                if (currentDate <= endOfMonth.time) {
+                    // it's the end of the month, save the worked time to firestore
+                    saveWorkedTimetoMonthFieldInTheFireStore()
+                } else {
+                    // reset the month because we will start a new month
+                    monthWorkedTime = 0
+                }
+            } else {
+                // reset the week because we will start a new week
+                weekWorkedTime = 0
             }
-
-            // reset the week because we will start a new week
-            weekWorkedTime = 0
+            updateViews()
+            isTimerRunning = false
         }
     }
     private fun saveWorkedTimetoYesterdayFieldInTheFireStore() {
-        val userId = FirebaseAuth.getInstance().currentUser!!.uid
+        val workedTimeInMinutes = yesterdayWorkedTime
+        val hours = workedTimeInMinutes / 60
+        val minutes = workedTimeInMinutes % 60
+        val workedTimeInHours = "${hours}h ${minutes}m"
+
         val appUserRef =
-            FirebaseFirestore.getInstance().collection(AppUser.COLLECTION_NAME).document(userId)
-        appUserRef.update("yesterday", yesterdayWorkedTime)
+            FirebaseFirestore.getInstance().collection(AppUser.COLLECTION_NAME).document(user?.id!!)
+
+        appUserRef.update("yesterday", workedTimeInHours)
             .addOnSuccessListener {
             }
-            .addOnFailureListener { exception ->
+            .addOnFailureListener {
             }
     }
 

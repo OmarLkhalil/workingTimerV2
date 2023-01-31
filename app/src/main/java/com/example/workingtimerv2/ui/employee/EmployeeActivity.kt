@@ -16,7 +16,7 @@ import com.google.firebase.firestore.FirebaseFirestore
 
 class EmployeeActivity : BaseActivity<ActivityEmployeeBinding, EmployeeViewModel>(), Navigator {
 
-
+    lateinit var user: AppUser
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
 
@@ -29,13 +29,15 @@ class EmployeeActivity : BaseActivity<ActivityEmployeeBinding, EmployeeViewModel
         // I call the startTimer function from viewModel to start the timer when Activity is created
         // When activity is created means the user is successfully signed in
         viewModel.startTimer()
-        val userName: String = intent.getStringExtra("name")!!
+        user = intent.getParcelableExtra("name")!!
         viewModel.setDate()
-        viewModel.setUserName(userName)
-        viewModel.updateViews()
-
+        viewModel.setUserName(user.name!!)
     }
 
+    override fun onResume() {
+        super.onResume()
+        viewModel.updateViews()
+    }
     override fun getLayoutId(): Int {
         return R.layout.activity_employee
     }

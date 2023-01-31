@@ -25,6 +25,4 @@
         android:layout_margin="12dp"
         />
 
-
-
 </androidx.constraintlayout.widget.ConstraintLayout>
