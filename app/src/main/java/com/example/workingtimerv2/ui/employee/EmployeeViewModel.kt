@@ -61,21 +61,21 @@ class EmployeeViewModel : BaseViewModel<Navigator>() {
 
     fun updateViews() {
 
-        val yesterdayWorkedTimeInMinutes = yesterdayWorkedTime
+        val yesterdayWorkedTimeInMinutes = (yesterdayWorkedTime / 1000) /60
         val yesterdayHourss = yesterdayWorkedTimeInMinutes / 60
         val yesterdayMinutes = yesterdayWorkedTimeInMinutes % 60
 
         yesterdayWorkedTimeTV.set("${yesterdayHourss}h ${yesterdayMinutes}m")
         yesterdayWorkedTimeTV.notifyChange()
 
-        val weekWorkedTimeInMinutes = weekWorkedTime
+        val weekWorkedTimeInMinutes = (weekWorkedTime / 1000) /60
         val weekHourss = weekWorkedTimeInMinutes / 60
         val weekMinutes = weekWorkedTimeInMinutes % 60
 
         weekWorkedTimeTV.set("${weekHourss}h ${weekMinutes}m")
         weekWorkedTimeTV.notifyChange()
 
-        val monthWorkedTimeInMinutes = monthWorkedTime
+        val monthWorkedTimeInMinutes = (monthWorkedTime / 1000) /60
         val monthHourss = monthWorkedTimeInMinutes / 60
         val monthMinutes = monthWorkedTimeInMinutes % 60
 
@@ -153,7 +153,7 @@ class EmployeeViewModel : BaseViewModel<Navigator>() {
         if (isTimerRunning){
             job?.cancel()
             // save worked time to yesterday
-            yesterdayWorkedTime = remainingTime
+            yesterdayWorkedTime += remainingTime
             saveWorkedTimetoYesterdayFieldInTheFireStore()
             // add worked time to the week
             weekWorkedTime += yesterdayWorkedTime
@@ -186,15 +186,12 @@ class EmployeeViewModel : BaseViewModel<Navigator>() {
         }
     }
     private fun saveWorkedTimetoYesterdayFieldInTheFireStore() {
-        val workedTimeInMinutes = yesterdayWorkedTime
-        val hours = workedTimeInMinutes / 60
-        val minutes = workedTimeInMinutes % 60
-        val workedTimeInHours = "${hours}h ${minutes}m"
+        val userId = FirebaseAuth.getInstance().currentUser!!.uid
 
         val appUserRef =
-            FirebaseFirestore.getInstance().collection(AppUser.COLLECTION_NAME).document(user?.id!!)
+            FirebaseFirestore.getInstance().collection(AppUser.COLLECTION_NAME).document(userId)
 
-        appUserRef.update("yesterday", workedTimeInHours)
+        appUserRef.update("yesterday", yesterdayWorkedTime)
             .addOnSuccessListener {
             }
             .addOnFailureListener {

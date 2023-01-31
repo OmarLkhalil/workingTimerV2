@@ -1,3 +1,4 @@
+
 package com.example.workingtimerv2.ui.employee
 
 
@@ -11,8 +12,6 @@ import com.example.workingtimerv2.base.BaseActivity
 import com.example.workingtimerv2.databinding.ActivityEmployeeBinding
 import com.example.workingtimerv2.model.AppUser
 import com.example.workingtimerv2.ui.login.LoginActivity
-import com.google.firebase.auth.FirebaseAuth
-import com.google.firebase.firestore.FirebaseFirestore
 
 class EmployeeActivity : BaseActivity<ActivityEmployeeBinding, EmployeeViewModel>(), Navigator {
 
@@ -29,9 +28,10 @@ class EmployeeActivity : BaseActivity<ActivityEmployeeBinding, EmployeeViewModel
         // I call the startTimer function from viewModel to start the timer when Activity is created
         // When activity is created means the user is successfully signed in
         viewModel.startTimer()
-        user = intent.getParcelableExtra("name")!!
+        user = intent.getParcelableExtra("uname")!!
         viewModel.setDate()
         viewModel.setUserName(user.name!!)
+
     }
 
     override fun onResume() {
