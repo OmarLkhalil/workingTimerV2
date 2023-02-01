@@ -1,12 +1,11 @@
 package com.example.workingtimerv2.ui.employee
 
 
-import android.util.Log
+import android.view.View
+import androidx.appcompat.widget.AppCompatImageButton
 import androidx.databinding.ObservableField
 import androidx.lifecycle.viewModelScope
-import com.example.workingtimerv2.DataUtils.user
 import com.example.workingtimerv2.base.BaseViewModel
-import com.example.workingtimerv2.database.getCollection
 import com.example.workingtimerv2.model.AppUser
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.firestore.FieldValue
@@ -27,8 +26,9 @@ class EmployeeViewModel : BaseViewModel<Navigator>() {
     var MonthWorkedTimeTV      = ObservableField<String>()
 
     private var remainingTime = 7 * 60 * 60 * 1000L
-    private var job: Job? = null
-    private var isTimerRunning = false
+    private var TotalTime     = 7 * 60 * 60 * 1000L
+    private var job: Job?     = null
+    private var isTimerRunning= false
     private val calendar = Calendar.getInstance()
 
 
@@ -36,7 +36,8 @@ class EmployeeViewModel : BaseViewModel<Navigator>() {
     private var weekWorkedTime      = 0L
     private var monthWorkedTime     = 0L
 
-
+    lateinit var startButton: AppCompatImageButton
+    lateinit var pauseButton: AppCompatImageButton
 
 //    fun setWorkedTimes(){
 //        val db = FirebaseFirestore.getInstance()
@@ -95,15 +96,19 @@ class EmployeeViewModel : BaseViewModel<Navigator>() {
                     updateTimerText()
                 }
             }
+            startButton.visibility = View.GONE
+            pauseButton.visibility = View.VISIBLE
             isTimerRunning = true
         }
     }
+
+
     @JvmName("getTimer1")
     fun getTimer() = timer
 
     // Method to make the text timer -- change text to current time
     private suspend fun updateTimerText() {
-        val hours = remainingTime / (60 * 60 * 1000) % 24
+        val hours   = remainingTime / (60 * 60 * 1000) % 24
         val minutes = remainingTime / (60 * 1000) % 60
         val seconds = remainingTime / 1000 % 60
         val timerText = "${hours.toString().padStart(2, '0')}:${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}"
@@ -153,7 +158,7 @@ class EmployeeViewModel : BaseViewModel<Navigator>() {
         if (isTimerRunning){
             job?.cancel()
             // save worked time to yesterday
-            yesterdayWorkedTime += remainingTime
+            yesterdayWorkedTime =  TotalTime - remainingTime
             saveWorkedTimetoYesterdayFieldInTheFireStore()
             // add worked time to the week
             weekWorkedTime += yesterdayWorkedTime
@@ -223,13 +228,14 @@ class EmployeeViewModel : BaseViewModel<Navigator>() {
     }
 
 
-
     // Method to pause the timer
     // If user clicks on the button again it will continue the timer
     fun pause() {
         if (isTimerRunning) {
             job?.cancel()
             isTimerRunning = false
+            startButton.visibility = View.VISIBLE
+            pauseButton.visibility = View.GONE
         } else {
             startTimer()
         }

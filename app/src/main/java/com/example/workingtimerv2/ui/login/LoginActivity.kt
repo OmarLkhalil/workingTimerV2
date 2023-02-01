@@ -30,7 +30,7 @@ class LoginActivity : BaseActivity<ActivityLoginBinding, LoginViewModel>() , Nav
 
     override fun openEmployeeScreen(userName: String) {
         val intent = Intent(this, EmployeeActivity::class.java)
-        intent.putExtra("name", userName)
+        intent.putExtra("uname", userName)
         startActivity(intent)
     }
 
